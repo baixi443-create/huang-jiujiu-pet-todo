@@ -8,7 +8,7 @@ kibble:{name:'鸡肉冻干猫粮（一碗）',price:30,gain:15,img:icon('<ellips
 function read(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 let stock=read('baidangFoodInventory',{});if(!stock||typeof stock!=='object')stock={};
 for(const id in foods)stock[id]=Math.max(0,Math.floor(Number(stock[id])||0));
-let fullness=Math.min(100,Math.max(0,Number(read('baidangFullness',78))||0));
+let fullness=Math.min(100,Math.max(0,Number(read('baidangFullness',50))||0));
 let effect=read('baidangFoodEffect',null),timer;
 function save(){localStorage.setItem('baidangFoodInventory',JSON.stringify(stock));localStorage.setItem('baidangFullness',String(fullness));localStorage.setItem('baidangFoodEffect',JSON.stringify(effect))}
 const stat=q('#pet .stats .stat');stat.querySelector('b').id='fullnessValue';stat.querySelector('.bar i').id='fullnessBar';
