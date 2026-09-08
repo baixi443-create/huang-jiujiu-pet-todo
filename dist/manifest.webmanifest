@@ -1,0 +1,32 @@
+{
+  "name": "黄啾啾 · 宠物待办",
+  "short_name": "黄啾啾",
+  "description": "完成小事，陪黄啾啾一起慢慢来。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffdf9",
+  "theme_color": "#fffdf9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
