@@ -1,7 +1,7 @@
 {
-  "name": "黄啾啾 · 宠物待办",
-  "short_name": "黄啾啾",
-  "description": "完成小事，陪黄啾啾一起慢慢来。",
+  "name": "啾啾 · 宠物待办",
+  "short_name": "啾啾",
+  "description": "完成小事，陪啾啾一起慢慢来。",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
