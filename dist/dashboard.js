@@ -2,7 +2,10 @@
   const TASK_HISTORY_KEY = 'baidangTaskHistoryV1';
   const PET_HISTORY_KEY = 'baidangPetStatusHistoryV1';
   const LEVEL_KEY = 'baidangPetLevelV1';
-  const LEVEL_LATCH_KEY = 'baidangPetLevelFullLatchV1';
+  const MOOD_HIT_KEY = 'baidangPetLevelMoodHitV2';
+  const FULLNESS_HIT_KEY = 'baidangPetLevelFullnessHitV2';
+  const MOOD_FULL_KEY = 'baidangPetLevelMoodWasFullV2';
+  const FULLNESS_FULL_KEY = 'baidangPetLevelFullnessWasFullV2';
 
   function readObject(key) {
     try {
@@ -79,17 +82,35 @@
   }
 
   let level = 1;
-  let levelLatch = false;
+  let moodHit = false;
+  let fullnessHit = false;
+  let moodWasFull = false;
+  let fullnessWasFull = false;
+
+  function saveLevelProgress() {
+    localStorage.setItem(LEVEL_KEY, String(level));
+    localStorage.setItem(MOOD_HIT_KEY, moodHit ? '1' : '0');
+    localStorage.setItem(FULLNESS_HIT_KEY, fullnessHit ? '1' : '0');
+    localStorage.setItem(MOOD_FULL_KEY, moodWasFull ? '1' : '0');
+    localStorage.setItem(FULLNESS_FULL_KEY, fullnessWasFull ? '1' : '0');
+  }
 
   function initializeLevel() {
     level = Math.max(1, Math.floor(Number(localStorage.getItem(LEVEL_KEY)) || 1));
-    if (localStorage.getItem(LEVEL_LATCH_KEY) == null) {
-      levelLatch = Number(mood) >= 100 && fullnessValue() >= 100;
-      localStorage.setItem(LEVEL_KEY, String(level));
-      localStorage.setItem(LEVEL_LATCH_KEY, levelLatch ? '1' : '0');
+    const moodFullNow = Number(mood) >= 99.999;
+    const fullnessFullNow = fullnessValue() >= 99.999;
+    if (localStorage.getItem(MOOD_HIT_KEY) == null) {
+      moodHit = moodFullNow;
+      fullnessHit = fullnessFullNow;
+      moodWasFull = moodFullNow;
+      fullnessWasFull = fullnessFullNow;
     } else {
-      levelLatch = localStorage.getItem(LEVEL_LATCH_KEY) === '1';
+      moodHit = localStorage.getItem(MOOD_HIT_KEY) === '1';
+      fullnessHit = localStorage.getItem(FULLNESS_HIT_KEY) === '1';
+      moodWasFull = localStorage.getItem(MOOD_FULL_KEY) === '1';
+      fullnessWasFull = localStorage.getItem(FULLNESS_FULL_KEY) === '1';
     }
+    saveLevelProgress();
   }
 
   function updateLevelLabels() {
@@ -100,18 +121,19 @@
   }
 
   function checkLevel() {
-    const full = Number(mood) >= 99.999 && fullnessValue() >= 99.999;
-    if (full && !levelLatch) {
+    const moodFullNow = Number(mood) >= 99.999;
+    const fullnessFullNow = fullnessValue() >= 99.999;
+    if (moodFullNow && !moodWasFull) moodHit = true;
+    if (fullnessFullNow && !fullnessWasFull) fullnessHit = true;
+    moodWasFull = moodFullNow;
+    fullnessWasFull = fullnessFullNow;
+    if (moodHit && fullnessHit) {
       level += 1;
-      levelLatch = true;
-      localStorage.setItem(LEVEL_KEY, String(level));
-      localStorage.setItem(LEVEL_LATCH_KEY, '1');
-      updateLevelLabels();
-      if (typeof toast === 'function') toast(`啾啾升级到 Lv. ${level} 啦！`);
-    } else if (!full && levelLatch) {
-      levelLatch = false;
-      localStorage.setItem(LEVEL_LATCH_KEY, '0');
+      moodHit = false;
+      fullnessHit = false;
+      if (typeof toast === 'function') toast('心情和饱食度各满过一次，啾啾升级到 Lv. ' + level + ' 啦！');
     }
+    saveLevelProgress();
     updateLevelLabels();
   }
 
