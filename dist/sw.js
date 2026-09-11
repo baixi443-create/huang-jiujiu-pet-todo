@@ -1,4 +1,4 @@
-const CACHE_NAME='huang-jiujiu-v11';
+const CACHE_NAME='huang-jiujiu-v12';
 const ASSETS=['./','./index.html','./pet-todo.html','./manifest.webmanifest','./currency.css','./food-items.js','./pet-care.js','./dashboard.js','./huang-jiujiu.png','./huang-jiujiu-play-1-cutout.png','./huang-jiujiu-play-2-cutout.png','./huang-jiujiu-feed-1-cutout.png','./huang-jiujiu-feed-2-cutout.png','./huang-jiujiu-mood-happy-cutout.png','./huang-jiujiu-mood-sad-cutout.png','./huang-jiujiu-head.png','./huang-jiujiu-warning.png','./cat-wand.png','./icon-180.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));

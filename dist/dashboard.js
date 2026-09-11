@@ -26,16 +26,16 @@
     return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
   }
 
-  function relevantTasks(list, day) {
-    return (Array.isArray(list) ? list : []).filter(task => !task.deadline || task.deadline <= day);
+  function visibleTasks(list) {
+    return Array.isArray(list) ? list : [];
   }
 
   window.archiveTaskDay = (day, list) => {
     if (!day) return;
-    const daily = relevantTasks(list, day);
+    const daily = visibleTasks(list);
     const done = daily.filter(task => task.done).length;
     const history = readObject(TASK_HISTORY_KEY);
-    history[day] = { done, total: daily.length, rate: daily.length ? Math.round(done / daily.length * 100) : 0 };
+    history[day] = { done, total: daily.length, rate: daily.length ? Math.round(done / daily.length * 100) : null };
     localStorage.setItem(TASK_HISTORY_KEY, JSON.stringify(trimHistory(history)));
   };
 
@@ -62,17 +62,31 @@
     const x = index => left + plotWidth * index / 6;
     const y = value => top + plotHeight * (100 - value) / 100;
     const labels = ['一', '二', '三', '四', '五', '六', '日'];
-    const valid = values.map((value, index) => value == null ? null : { value, index }).filter(Boolean);
-    const points = valid.map(point => `${x(point.index)},${y(point.value)}`).join(' ');
+    const segments = [];
+    let segment = [];
+    values.forEach((value, index) => {
+      if (value == null) {
+        if (segment.length) segments.push(segment);
+        segment = [];
+        return;
+      }
+      segment.push({ value, index });
+    });
+    if (segment.length) segments.push(segment);
+    const valid = segments.flat();
+    const lines = segments
+      .filter(points => points.length > 1)
+      .map(points => `<polyline points="${points.map(point => `${x(point.index)},${y(point.value)}`).join(' ')}" style="stroke:${color}"/>`)
+      .join('');
     const grid = [0, 25, 50, 75, 100].map(value => `<line x1="${left}" y1="${y(value)}" x2="${width - right}" y2="${y(value)}"/><text x="${left - 5}" y="${y(value) + 3}" text-anchor="end">${value}</text>`).join('');
     const days = labels.map((text, index) => `<text class="day" x="${x(index)}" y="${height - 8}" text-anchor="middle">${text}</text>`).join('');
     const marks = valid.map(point => `<g><circle cx="${x(point.index)}" cy="${y(point.value)}" r="4"/><text class="value" x="${x(point.index)}" y="${Math.max(11, y(point.value) - 8)}" text-anchor="middle">${point.value}%</text><title>周${labels[point.index]} ${point.value}%</title></g>`).join('');
     const empty = valid.length ? '' : `<text class="empty-chart" x="${width / 2}" y="${height / 2}" text-anchor="middle">本周暂无记录</text>`;
-    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${label}"><g class="grid">${grid}</g><g class="axis-labels">${days}</g>${valid.length > 1 ? `<polyline points="${points}" style="stroke:${color}"/>` : ''}<g class="marks" style="color:${color}">${marks}</g>${empty}</svg>`;
+    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${label}"><g class="grid">${grid}</g><g class="axis-labels">${days}</g>${lines}<g class="marks" style="color:${color}">${marks}</g>${empty}</svg>`;
   }
 
   function currentTaskStats() {
-    const list = relevantTasks(tasks, dayKey());
+    const list = visibleTasks(tasks);
     const done = list.filter(task => task.done).length;
     return { done, total: list.length, rate: list.length ? Math.round(done / list.length * 100) : 0 };
   }
@@ -162,8 +176,9 @@
     const taskValues = dates.map(date => {
       const key = dayKey(date);
       if (key > todayKey) return null;
-      if (key === todayKey) return todayStats.rate;
-      return taskHistory[key] ? taskHistory[key].rate : null;
+      if (key === todayKey) return todayStats.total ? todayStats.rate : null;
+      const entry = taskHistory[key];
+      return entry && Number(entry.total) > 0 && Number.isFinite(Number(entry.rate)) ? Number(entry.rate) : null;
     });
     const petValues = dates.map(date => petHistory[dayKey(date)] ?? null);
     document.querySelector('#taskWeekChart').innerHTML = lineChart(taskValues, '#dc7a75', '本周任务完成率折线图');
