@@ -26,13 +26,13 @@
     return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
   }
 
-  function visibleTasks(list) {
-    return Array.isArray(list) ? list : [];
+  function visibleTasks(list, day = dayKey()) {
+    return (Array.isArray(list) ? list : []).filter(task => !task.availableDay || task.availableDay <= day);
   }
 
   window.archiveTaskDay = (day, list) => {
     if (!day) return;
-    const daily = visibleTasks(list);
+    const daily = visibleTasks(list, day);
     const done = daily.filter(task => task.done).length;
     const history = readObject(TASK_HISTORY_KEY);
     history[day] = { done, total: daily.length, rate: daily.length ? Math.round(done / daily.length * 100) : null };
@@ -86,7 +86,7 @@
   }
 
   function currentTaskStats() {
-    const list = visibleTasks(tasks);
+    const list = typeof window.getTodayTasks === 'function' ? window.getTodayTasks() : visibleTasks(tasks, dayKey());
     const done = list.filter(task => task.done).length;
     return { done, total: list.length, rate: list.length ? Math.round(done / list.length * 100) : 0 };
   }
@@ -200,17 +200,12 @@
 
   function init() {
     initializeLevel();
-    if (typeof render === 'function') {
-      const previousRender = render;
-      render = () => {
-        previousRender();
-        checkLevel();
-        drawDashboard();
-      };
-    }
-    recordPetStatus();
-    checkLevel();
-    drawDashboard();
+    window.refreshDashboard = () => {
+      recordPetStatus();
+      checkLevel();
+      drawDashboard();
+    };
+    window.refreshDashboard();
     scheduleEightPm();
     document.addEventListener('click', () => setTimeout(() => { checkLevel(); recordPetStatus(); drawDashboard(); }, 0));
     document.addEventListener('submit', () => setTimeout(drawDashboard, 0));
