@@ -2,10 +2,12 @@
   const TASK_HISTORY_KEY = 'baidangTaskHistoryV1';
   const PET_HISTORY_KEY = 'baidangPetStatusHistoryV1';
   const LEVEL_KEY = 'baidangPetLevelV1';
-  const MOOD_HIT_KEY = 'baidangPetLevelMoodHitV2';
-  const FULLNESS_HIT_KEY = 'baidangPetLevelFullnessHitV2';
-  const MOOD_FULL_KEY = 'baidangPetLevelMoodWasFullV2';
-  const FULLNESS_FULL_KEY = 'baidangPetLevelFullnessWasFullV2';
+  const PROGRESS_VERSION_KEY = 'baidangPetLevelProgressV3';
+  const MOOD_HIT_KEY = 'baidangPetLevelMoodHitV3';
+  const FULLNESS_HIT_KEY = 'baidangPetLevelFullnessHitV3';
+  const MOOD_FULL_KEY = 'baidangPetLevelMoodWasFullV3';
+  const FULLNESS_FULL_KEY = 'baidangPetLevelFullnessWasFullV3';
+  const FULL_THRESHOLD = 99.5;
 
   function readObject(key) {
     try {
@@ -95,6 +97,10 @@
     return window.petFullness ? Number(window.petFullness.get()) : 50;
   }
 
+  function isFull(value) {
+    return Number(value) >= FULL_THRESHOLD;
+  }
+
   let level = 1;
   let moodHit = false;
   let fullnessHit = false;
@@ -111,9 +117,15 @@
 
   function initializeLevel() {
     level = Math.max(1, Math.floor(Number(localStorage.getItem(LEVEL_KEY)) || 1));
-    const moodFullNow = Number(mood) >= 99.999;
-    const fullnessFullNow = fullnessValue() >= 99.999;
-    if (localStorage.getItem(MOOD_HIT_KEY) == null) {
+    const moodFullNow = isFull(mood);
+    const fullnessFullNow = isFull(fullnessValue());
+    if (localStorage.getItem(PROGRESS_VERSION_KEY) !== '1') {
+      moodHit = localStorage.getItem('baidangPetLevelMoodHitV2') === '1' || moodFullNow;
+      fullnessHit = localStorage.getItem('baidangPetLevelFullnessHitV2') === '1' || fullnessFullNow;
+      moodWasFull = moodFullNow;
+      fullnessWasFull = fullnessFullNow;
+      localStorage.setItem(PROGRESS_VERSION_KEY, '1');
+    } else if (localStorage.getItem(MOOD_HIT_KEY) == null) {
       moodHit = moodFullNow;
       fullnessHit = fullnessFullNow;
       moodWasFull = moodFullNow;
@@ -135,8 +147,8 @@
   }
 
   function checkLevel() {
-    const moodFullNow = Number(mood) >= 99.999;
-    const fullnessFullNow = fullnessValue() >= 99.999;
+    const moodFullNow = isFull(mood);
+    const fullnessFullNow = isFull(fullnessValue());
     if (moodFullNow && !moodWasFull) moodHit = true;
     if (fullnessFullNow && !fullnessWasFull) fullnessHit = true;
     moodWasFull = moodFullNow;

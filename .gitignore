@@ -1,0 +1,23 @@
+# Local environment files and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and generated caches
+node_modules/
+.cache/
+.sites-runtime/
+.tmp/
+tmp/
+coverage/
+
+# Local editor and operating-system files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local deployment archives (the static app source is kept in dist/)
+*.tar.gz
+*.zip
